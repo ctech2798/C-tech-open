@@ -13,4 +13,4 @@ dependencies = [
 ]
 
 [tool.vercel]
-entrypoint = "serveur_depot.py"
+entrypoint = "serveur_depot:app"
