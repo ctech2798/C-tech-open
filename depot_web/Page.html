@@ -1,413 +1,62 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dépôt de Projets • Espace Étudiants</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card-bg: rgba(23, 32, 54, 0.85);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --primary: #38bdf8;
-      --primary-hover: #0ea5e9;
-      --accent: #6366f1;
-      --success: #34d399;
-      --error: #f87171;
-      --radius: 16px;
-    }
+// ====================================================================
+// ESPACE DE DÉPÔT WEB ÉTUDIANTS (Google Apps Script)
+// ====================================================================
 
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg: #f8fafc;
-        --card-bg: rgba(255, 255, 255, 0.95);
-        --card-border: rgba(0, 0, 0, 0.08);
-        --text: #0f172a;
-        --text-muted: #64748b;
-        --primary: #0284c7;
-        --primary-hover: #0369a1;
-        --accent: #4f46e5;
-      }
-    }
+//ID de votre dossier Google Drive "Rendus"
+var FOLDER_ID = "1MOa6TOkuvjr9EfbZvn5L-rCtb5TedmbA";
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+function doGet(e) {
+var template = HtmlService.createTemplateFromFile("Page");
+return template.evaluate()
+.setTitle("Dépôt de Projets Étudiants")
+.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+.addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
 
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-    }
+function uploadFile(data) {
+try {
+var nom = data.nom.trim();
+var prenom = data.prenom.trim();
 
-    .container {
-      width: 100%;
-      max-width: 540px;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      padding: 2.2rem;
-      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
-    }
+// Nettoyage du nom pour créer un slug propre (ex: dupont-alice.zip)
+var slugNom = nom.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+var slugPrenom = prenom.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
+if (!slugNom || !slugPrenom) {
+return { success: false, error: "Nom ou prénom invalide." };
+}
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.85rem;
-      border-radius: 30px;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: var(--primary);
-      font-size: 0.82rem;
-      font-weight: 600;
-      margin-bottom: 0.85rem;
-    }
+var fileName = slugNom + "-" + slugPrenom + ".zip";
 
-    h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.7rem;
-      font-weight: 700;
-      margin-bottom: 0.35rem;
-      letter-spacing: -0.02em;
-    }
+// Récupération du dossier Google Drive
+var folder = DriveApp.getFolderById(FOLDER_ID);
 
-    .subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
+// Décodage du fichier envoyé en Base64
+var contentType = data.mimeType || "application/zip";
+var bytes = Utilities.base64Decode(data.base64);
+var blob = Utilities.newBlob(bytes, contentType, fileName);
 
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
+// Vérification de la taille (max 30 Mo)
+if (blob.getBytes().length > 30 * 1024 * 1024) {
+return { success: false, error: "Fichier trop volumineux (max 30 Mo)." };
+}
 
-    label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-    }
+// Suppression d'un éventuel ancien rendu du même étudiant pour remplacer par le nouveau
+var existingFiles = folder.getFilesByName(fileName);
+while (existingFiles.hasNext()) {
+existingFiles.next().setTrashed(true);
+}
 
-    .row {
-      display: flex;
-      gap: 1rem;
-    }
+// Création du nouveau fichier dans le dossier Drive
+var file = folder.createFile(blob);
 
-    .row .form-group {
-      flex: 1;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      border: 1px solid var(--card-border);
-      background: rgba(0, 0, 0, 0.15);
-      color: var(--text);
-      font-size: 0.95rem;
-    }
-
-    input[type="text"]:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-    }
-
-    .dropzone {
-      border: 2px dashed var(--card-border);
-      border-radius: 12px;
-      padding: 2rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      background: rgba(0, 0, 0, 0.08);
-      position: relative;
-      transition: all 0.2s ease;
-    }
-
-    .dropzone:hover, .dropzone.dragover {
-      border-color: var(--primary);
-      background: rgba(56, 189, 248, 0.05);
-    }
-
-    .dropzone input[type="file"] {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .dropzone-icon {
-      width: 44px;
-      height: 44px;
-      margin: 0 auto 0.6rem;
-      color: var(--primary);
-    }
-
-    .file-preview {
-      display: none;
-      margin-top: 0.85rem;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      font-size: 0.88rem;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .file-preview.active {
-      display: flex;
-    }
-
-    .rules-card {
-      background: rgba(0, 0, 0, 0.12);
-      border-radius: 10px;
-      padding: 0.85rem 1rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .rules-card ul {
-      margin-left: 1.25rem;
-      margin-top: 0.3rem;
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 0.9rem;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: white;
-      font-size: 1rem;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
-      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-      transition: all 0.2s;
-    }
-
-    .btn-submit:hover:not(:disabled) {
-      opacity: 0.92;
-      transform: translateY(-2px);
-    }
-
-    .btn-submit:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .alert {
-      display: none;
-      padding: 1rem;
-      border-radius: 12px;
-      margin-top: 1.25rem;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-
-    .alert.success {
-      display: block;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid var(--success);
-      color: var(--success);
-    }
-
-    .alert.error {
-      display: block;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid var(--error);
-      color: var(--error);
-    }
-
-    .spinner {
-      display: none;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="badge">☁️ Espace de Dépôt en Ligne</div>
-      <h1>Dépôt de Projets Étudiants</h1>
-      <p class="subtitle">Téléversez votre archive .zip directement sur le Drive du club</p>
-    </div>
-
-    <form id="uploadForm">
-      <div class="row">
-        <div class="form-group">
-          <label for="nom">Nom :</label>
-          <input type="text" id="nom" placeholder="Ex: Dupont" required>
-        </div>
-        <div class="form-group">
-          <label for="prenom">Prénom :</label>
-          <input type="text" id="prenom" placeholder="Ex: Alice" required>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Archive du projet (.zip) :</label>
-        <div class="dropzone" id="dropzone">
-          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <div style="font-weight: 600; margin-bottom: 0.25rem;">Glissez votre .zip ici ou cliquez</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">Taille max : 30 Mo • Format .zip uniquement</div>
-          <input type="file" id="fileInput" accept=".zip,application/zip" required>
-        </div>
-
-        <div class="file-preview" id="filePreview">
-          <span id="fileName">projet.zip</span>
-          <span id="fileSize" style="color: var(--text-muted);">0 Mo</span>
-        </div>
-      </div>
-
-      <div class="rules-card">
-        <strong>⚠️ Consignes de validation :</strong>
-        <ul>
-          <li>L'archive doit contenir obligatoirement un fichier <code>index.html</code>.</li>
-          <li>Ressources acceptées : HTML, CSS, JavaScript, images, vidéos et polices.</li>
-          <li>Les exécutables (.exe, .bat) sont strictement interdits.</li>
-        </ul>
-      </div>
-
-      <button type="submit" class="btn-submit" id="submitBtn">
-        <div class="spinner" id="spinner"></div>
-        <span id="btnText">🚀 Téléverser mon projet</span>
-      </button>
-
-      <div class="alert" id="resultAlert"></div>
-    </form>
-  </div>
-
-  <script>
-    const fileInput = document.getElementById('fileInput');
-    const dropzone = document.getElementById('dropzone');
-    const filePreview = document.getElementById('filePreview');
-    const fileName = document.getElementById('fileName');
-    const fileSize = document.getElementById('fileSize');
-    const submitBtn = document.getElementById('submitBtn');
-    const spinner = document.getElementById('spinner');
-    const btnText = document.getElementById('btnText');
-    const resultAlert = document.getElementById('resultAlert');
-    const form = document.getElementById('uploadForm');
-
-    ['dragenter', 'dragover'].forEach(name => {
-      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
-    });
-    ['dragleave', 'drop'].forEach(name => {
-      dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
-    });
-
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (file) {
-        fileName.textContent = file.name;
-        fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' Mo';
-        filePreview.classList.add('active');
-      } else {
-        filePreview.classList.remove('active');
-      }
-    });
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const nom = document.getElementById('nom').value.trim();
-      const prenom = document.getElementById('prenom').value.trim();
-      const file = fileInput.files[0];
-
-      if (!file) {
-        alert('Veuillez sélectionner un fichier .zip.');
-        return;
-      }
-
-      if (!file.name.toLowerCase().endsWith('.zip')) {
-        alert('Seuls les fichiers .zip sont acceptés.');
-        return;
-      }
-
-      submitBtn.disabled = true;
-      spinner.style.display = 'block';
-      btnText.textContent = 'Envoi vers Google Drive en cours...';
-      resultAlert.style.display = 'none';
-
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const base64Data = evt.target.result.split(',')[1];
-
-        const payload = {
-          nom: nom,
-          prenom: prenom,
-          mimeType: file.type || 'application/zip',
-          base64: base64Data
-        };
-
-        google.script.run
-          .withSuccessHandler(function(res) {
-            submitBtn.disabled = false;
-            spinner.style.display = 'none';
-            btnText.textContent = '🚀 Téléverser mon projet';
-
-            if (res.success) {
-              resultAlert.className = 'alert success';
-              resultAlert.innerHTML = `
-                <strong>🎉 Projet déposé avec succès !</strong><br>
-                Fichier enregistré sur le Drive : <code>${res.filename}</code><br>
-                Horodatage : ${res.date}
-              `;
-              form.reset();
-              filePreview.classList.remove('active');
-            } else {
-              resultAlert.className = 'alert error';
-              resultAlert.innerHTML = `<strong>❌ Erreur :</strong> ${res.error}`;
-            }
-          })
-          .withFailureHandler(function(err) {
-            submitBtn.disabled = false;
-            spinner.style.display = 'none';
-            btnText.textContent = '🚀 Téléverser mon projet';
-            resultAlert.className = 'alert error';
-            resultAlert.innerHTML = `<strong>❌ Erreur lors de l'envoi :</strong> ${err.message || err}`;
-          })
-          .uploadFile(payload);
-      };
-
-      reader.readAsDataURL(file);
-    });
-  </script>
-</body>
-</html>
+return {
+success: true,
+filename: fileName,
+fileId: file.getId(),
+date: new Date().toLocaleTimeString("fr-FR")
+};
+} catch (err) {
+return { success: false, error: err.toString() };
+}
+}
