@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Travaux des étudiants L1 Techno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: rgba(23, 32, 54, 0.75);
+      --surface-border: rgba(255, 255, 255, 0.1);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #6366f1;
+      --badge-warn-bg: rgba(245, 158, 11, 0.15);
+      --badge-warn-text: #fbbf24;
+      --badge-ok-bg: rgba(16, 185, 129, 0.15);
+      --badge-ok-text: #34d399;
+      --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      --radius: 14px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: rgba(255, 255, 255, 0.85);
+      --surface-border: rgba(0, 0, 0, 0.08);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #4f46e5;
+      --badge-warn-bg: #fef3c7;
+      --badge-warn-text: #b45309;
+      --badge-ok-bg: #d1fae5;
+      --badge-ok-text: #047857;
+      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    header {
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .brand-text h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .theme-toggle {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text);
+      cursor: pointer;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    main {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      flex: 1;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 480px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.6rem;
+      border-radius: 12px;
+      border: 1px solid var(--surface-border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .stats {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .count-pill {
+      background: var(--surface);
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      border: 1px solid var(--surface-border);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: var(--transition);
+      overflow: hidden;
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.85rem;
+    }
+
+    .project-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-ok {
+      background: var(--badge-ok-bg);
+      color: var(--badge-ok-text);
+    }
+
+    .badge-warn {
+      background: var(--badge-warn-bg);
+      color: var(--badge-warn-text);
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: auto;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #ffffff;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      border-color: var(--surface-border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    /* Modal de prévisualisation */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-window {
+      background: var(--bg);
+      width: 95%;
+      max-width: 1280px;
+      height: 90vh;
+      border-radius: 16px;
+      border: 1px solid var(--surface-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-header {
+      background: var(--surface);
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 1.05rem;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .modal-tools {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .modal-body {
+      flex: 1;
+      background: #ffffff;
+    }
+
+    .modal-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+    }
+
+    footer {
+      border-top: 1px solid var(--surface-border);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">L1</div>
+        <div class="brand-text">
+          <h1>Travaux des étudiants L1 Techno</h1>
+          <p>Portail des projets et réalisations web</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="themeToggle" class="theme-toggle" title="Changer de thème" aria-label="Changer de thème">
+          <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Rechercher un projet, étudiant..." autocomplete="off">
+      </div>
+      <div class="stats">
+        <span>Projets publiés :</span>
+        <span class="count-pill" id="projectCount">2</span>
+      </div>
+    </div>
+
+    <div class="projects-grid" id="projectsGrid">
+      <!-- Rempli dynamiquement via JS -->
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3 id="modalTitle">Aperçu du projet</h3>
+        <div class="modal-tools">
+          <a id="modalExternal" href="#" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            Plein écran ↗
+          </a>
+          <button id="modalClose" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            Fermer ✕
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <iframe id="previewIframe" src="about:blank" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Généré automatiquement par le gestionnaire de projets • 29/10/2026 à 12:18
+  </footer>
+
+  <script>
+    const projectsData = [{"id": "p1", "label": "Alice Dupont", "author": "Alice Dupont", "url": "travaux/alice-dupont/index.html", "slug": "alice-dupont", "file_count": 2, "size_kb": 0.3, "has_warnings": false, "warnings_text": ""}, {"id": "p2", "label": "Bob Martin", "author": "Bob Martin", "url": "travaux/bob-martin/index.html", "slug": "bob-martin", "file_count": 1, "size_kb": 0.2, "has_warnings": true, "warnings_text": "index.html (1 appel(s) externe(s))"}];
+
+    const grid = document.getElementById('projectsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const projectCount = document.getElementById('projectCount');
+    const modal = document.getElementById('previewModal');
+    const previewIframe = document.getElementById('previewIframe');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalExternal = document.getElementById('modalExternal');
+    const modalClose = document.getElementById('modalClose');
+    const themeToggle = document.getElementById('themeToggle');
+
+    // Gestion du thème sombre / clair
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+
+    // Affichage des projets
+    function renderProjects(items) {
+      grid.innerHTML = '';
+      projectCount.textContent = items.length;
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <h3>Aucun projet trouvé</h3>
+            <p>Essayez un autre mot-clé de recherche.</p>
+          </div>
+        `;
+        return;
+      }
+
+      items.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+
+        const badgeClass = p.has_warnings ? 'badge-warn' : 'badge-ok';
+        const badgeText = p.has_warnings ? 'Vérifié' : 'Conforme';
+
+        card.innerHTML = `
+          <div>
+            <div class="card-top">
+              <h2 class="project-title">${escapeHtml(p.label)}</h2>
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <div class="card-meta">
+              <span>📂 ${p.file_count} fichier(s)</span>
+              <span>💾 ${p.size_kb} Ko</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-secondary" onclick="openPreview('${encodeURI(p.url)}', '${escapeHtml(p.label)}')">
+              👁️ Aperçu
+            </button>
+            <a class="btn btn-primary" href="${encodeURI(p.url)}" target="_blank">
+              Visiter ↗
+            </a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Recherche instantanée
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = projectsData.filter(p => 
+        p.label.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)
+      );
+      renderProjects(filtered);
+    });
+
+    // Modal d'aperçu en direct
+    function openPreview(url, title) {
+      modalTitle.textContent = title;
+      modalExternal.href = url;
+      previewIframe.src = url;
+      modal.classList.add('active');
+    }
+
+    function closePreview() {
+      modal.classList.remove('active');
+      previewIframe.src = 'about:blank';
+    }
+
+    modalClose.addEventListener('click', closePreview);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closePreview();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) closePreview();
+    });
+
+    // Rendu initial
+    renderProjects(projectsData);
+  </script>
+</body>
+</html>

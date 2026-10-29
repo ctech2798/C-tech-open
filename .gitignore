@@ -1,0 +1,23 @@
+# Identifiants et jetons secrets Google OAuth (NE JAMAIS COMMITER)
+credentials.json
+token.json
+
+# Fichiers de données locales et archives
+rendus/*.zip
+rendus/.sync.json
+sauvegarde-*.zip
+site/travaux/
+
+# Caches Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environnements virtuels
+.venv/
+env/
+venv/
+
+# Editeur
+.vscode/
