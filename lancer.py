@@ -48,13 +48,12 @@ class App(tk.Tk):
         self._build_config_tab()
         self._build_help_tab()
 
-        # Démarrage automatique du serveur de dépôt en arrière-plan
-        self.start_upload_server(silent=True)
-
-        # Surveillance du nombre de projets reçus en temps réel
-        self._poll_received_count()
-
-        self.log("[SUCCES] Logiciel prêt. Le lien de dépôt réseau est actif pour les étudiants.")
+        # Démarrage du serveur local uniquement si aucun lien en ligne n'est configuré
+        if not self.online_link:
+            self.start_upload_server(silent=True)
+            self.log("[SUCCES] Logiciel prêt. Le lien de dépôt réseau est actif pour les étudiants.")
+        else:
+            self.log(f"[SUCCES] Logiciel prêt. Lien de dépôt en ligne : {self.online_link}")
 
     def _setup_styles(self):
         style = ttk.Style(self)
@@ -85,9 +84,10 @@ class App(tk.Tk):
         self.online_link = cfg.get("lien_depot_web", "").strip()
 
         if self.online_link:
-            ttk.Label(top_line, text="🌐 Lien de dépôt en ligne (Accessible partout sur Internet)", style="Status.TLabel").pack(side="left")
+            self.lbl_server_status = ttk.Label(top_line, text="🌐 Lien de dépôt en ligne (Accessible partout sur Internet)", style="Status.TLabel")
         else:
-            ttk.Label(top_line, text="📡 Lien de dépôt réseau (Wi-Fi / LAN du PC)", style="Status.TLabel").pack(side="left")
+            self.lbl_server_status = ttk.Label(top_line, text="📡 Lien de dépôt réseau (Wi-Fi / LAN du PC)", style="Status.TLabel")
+        self.lbl_server_status.pack(side="left")
 
         # Boîte du lien principal
         link_box = ttk.Frame(depot_frame)
@@ -219,7 +219,8 @@ class App(tk.Tk):
         self.server_thread = threading.Thread(target=run, daemon=True)
         self.server_thread.start()
         self.server_running = True
-        self.lbl_server_status.configure(text="🟢 Serveur de dépôt en ligne", foreground="#047857")
+        if hasattr(self, "lbl_server_status") and not self.online_link:
+            self.lbl_server_status.configure(text="🟢 Serveur de dépôt en ligne", foreground="#047857")
 
         if not silent:
             self.log(f"[SUCCES] Serveur de dépôt en ligne sur http://{self.local_ip}:8080")
