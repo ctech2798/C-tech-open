@@ -18,7 +18,12 @@ def _ipv4_first_getaddrinfo(*args, **kwargs):
     return (ipv4 + ipv6) if ipv4 else res
 socket.getaddrinfo = _ipv4_first_getaddrinfo
 
-BASE = Path(__file__).parent
+import sys
+if getattr(sys, 'frozen', False):
+    BASE = Path(sys.executable).parent
+else:
+    BASE = Path(__file__).resolve().parent
+
 RENDUS = BASE / "rendus"
 SITE = BASE / "site"
 CONFIG = BASE / "config.json"

@@ -21,3 +21,9 @@ venv/
 
 # Editeur
 .vscode/
+
+# Build PyInstaller & Exécutables
+build/
+dist/
+*.spec
+*.exe
