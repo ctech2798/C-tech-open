@@ -56,7 +56,8 @@ DEFAULT_CONFIG = {
     "sous_titre": "Portail des projets et réalisations web",
     "anonymiser": False,
     "rendus_folder_id": "",
-    "sauvegarde_folder_id": ""
+    "sauvegarde_folder_id": "",
+    "lien_depot_web": ""
 }
 
 

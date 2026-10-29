@@ -1,0 +1,62 @@
+// ====================================================================
+// ESPACE DE DÉPÔT WEB ÉTUDIANTS (Google Apps Script)
+// ====================================================================
+
+// ID de votre dossier Google Drive "Rendus"
+var FOLDER_ID = "1MOa6TOkuvjr9EfbZvn5L-rCtb5TedmbA";
+
+function doGet(e) {
+  var template = HtmlService.createTemplateFromFile("Page");
+  return template.evaluate()
+    .setTitle("Dépôt de Projets Étudiants")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function uploadFile(data) {
+  try {
+    var nom = data.nom.trim();
+    var prenom = data.prenom.trim();
+    
+    // Nettoyage du nom pour créer un slug propre (ex: dupont-alice.zip)
+    var slugNom = nom.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    var slugPrenom = prenom.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    
+    if (!slugNom || !slugPrenom) {
+      return { success: false, error: "Nom ou prénom invalide." };
+    }
+    
+    var fileName = slugNom + "-" + slugPrenom + ".zip";
+    
+    // Récupération du dossier Google Drive
+    var folder = DriveApp.getFolderById(FOLDER_ID);
+    
+    // Décodage du fichier envoyé en Base64
+    var contentType = data.mimeType || "application/zip";
+    var bytes = Utilities.base64Decode(data.base64);
+    var blob = Utilities.newBlob(bytes, contentType, fileName);
+    
+    // Vérification de la taille (max 30 Mo)
+    if (blob.getBytes().length > 30 * 1024 * 1024) {
+      return { success: false, error: "Fichier trop volumineux (max 30 Mo)." };
+    }
+    
+    // Suppression d'un éventuel ancien rendu du même étudiant pour remplacer par le nouveau
+    var existingFiles = folder.getFilesByName(fileName);
+    while (existingFiles.hasNext()) {
+      existingFiles.next().setTrashed(true);
+    }
+    
+    // Création du nouveau fichier dans le dossier Drive
+    var file = folder.createFile(blob);
+    
+    return {
+      success: true,
+      filename: fileName,
+      fileId: file.getId(),
+      date: new Date().toLocaleTimeString("fr-FR")
+    };
+  } catch (err) {
+    return { success: false, error: err.toString() };
+  }
+}

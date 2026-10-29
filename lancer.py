@@ -75,35 +75,38 @@ class App(tk.Tk):
     # ---------- Tableau de bord unifié ----------
     def _build_main_tab(self):
         # 1. Section Dépôt Étudiants
-        depot_frame = ttk.LabelFrame(self.tab_main, text=" 1. Espace de Téléversement des Étudiants (Lien Réseau) ", padding=12)
+        depot_frame = ttk.LabelFrame(self.tab_main, text=" 1. Espace de Téléversement des Étudiants ", padding=12)
         depot_frame.pack(fill="x", pady=(0, 12))
 
         top_line = ttk.Frame(depot_frame)
         top_line.pack(fill="x", pady=(0, 8))
 
-        self.lbl_server_status = ttk.Label(top_line, text="🟢 Serveur de dépôt en ligne", style="Status.TLabel")
-        self.lbl_server_status.pack(side="left")
+        cfg = club.load_config()
+        self.online_link = cfg.get("lien_depot_web", "").strip()
 
-        self.btn_server_toggle = ttk.Button(top_line, text="Redémarrer le serveur", command=self.restart_upload_server)
-        self.btn_server_toggle.pack(side="right")
+        if self.online_link:
+            ttk.Label(top_line, text="🌐 Lien de dépôt en ligne (Accessible partout sur Internet)", style="Status.TLabel").pack(side="left")
+        else:
+            ttk.Label(top_line, text="📡 Lien de dépôt réseau (Wi-Fi / LAN du PC)", style="Status.TLabel").pack(side="left")
 
-        # Boîte du lien
+        # Boîte du lien principal
         link_box = ttk.Frame(depot_frame)
         link_box.pack(fill="x", pady=(4, 6))
 
         ttk.Label(link_box, text="Lien à donner aux étudiants :", font=("Segoe UI", 10, "bold")).pack(side="left", padx=(0, 8))
 
-        self.entry_link = ttk.Entry(link_box, font=("Segoe UI", 10), width=32)
-        self.entry_link.insert(0, f"http://{self.local_ip}:8080")
+        current_display_link = self.online_link if self.online_link else f"http://{self.local_ip}:8080"
+        self.entry_link = ttk.Entry(link_box, font=("Segoe UI", 10), width=36)
+        self.entry_link.insert(0, current_display_link)
         self.entry_link.configure(state="readonly")
         self.entry_link.pack(side="left", fill="x", expand=True, padx=(0, 8))
 
         ttk.Button(link_box, text="📋 Copier le lien", style="Primary.TButton", command=self.copy_link).pack(side="left", padx=(0, 6))
-        ttk.Button(link_box, text="🌐 Tester", command=lambda: webbrowser.open(f"http://localhost:8080")).pack(side="left")
+        ttk.Button(link_box, text="🌐 Ouvrir le lien", command=self.open_current_link).pack(side="left")
 
         # Compteur et infos
         info_line = ttk.Frame(depot_frame)
-        info_line.pack(fill="x", pady=(4, 0))
+        info_line.pack(fill="x", pady=(6, 0))
 
         self.lbl_count = ttk.Label(
             info_line,
@@ -113,11 +116,19 @@ class App(tk.Tk):
         )
         self.lbl_count.pack(side="left")
 
-        ttk.Label(
-            info_line,
-            text="ℹ️ Les étudiants doivent être connectés au même Wi-Fi ou réseau local.",
-            style="Muted.TLabel"
-        ).pack(side="right")
+        if not self.online_link:
+            ttk.Label(
+                info_line,
+                text="💡 Astuce : Déployez votre page en ligne (voir onglet Guide) pour un lien public 24h/24.",
+                style="Muted.TLabel"
+            ).pack(side="right")
+        else:
+            ttk.Label(
+                info_line,
+                text="✅ Page web en ligne active.",
+                foreground="#047857",
+                font=("Segoe UI", 9, "bold")
+            ).pack(side="right")
 
         # 2. Section Traitement & Génération du site
         actions_frame = ttk.LabelFrame(self.tab_main, text=" 2. Construction du Portail & Synchronisation ", padding=12)
@@ -222,31 +233,42 @@ class App(tk.Tk):
         self.log(f"[INFO] Adresse réseau actualisée : http://{self.local_ip}:8080")
         messagebox.showinfo("Serveur", f"Lien réseau actualisé :\nhttp://{self.local_ip}:8080")
 
+    def open_current_link(self):
+        link = self.entry_link.get().strip()
+        if link:
+            webbrowser.open(link)
+
     def copy_link(self):
-        url = f"http://{self.local_ip}:8080"
+        link = self.entry_link.get().strip()
         self.clipboard_clear()
-        self.clipboard_append(url)
-        messagebox.showinfo("Lien Copié", f"Le lien a été copié dans le presse-papier :\n{url}\n\nDonnez-le aux étudiants !")
+        self.clipboard_append(link)
+        messagebox.showinfo("Lien Copié", f"Le lien a été copié dans le presse-papier :\n{link}\n\nDonnez-le aux étudiants !")
 
     # ---------- Onglet Paramètres ----------
     def _build_config_tab(self):
         cfg = club.load_config()
 
-        ttk.Label(self.tab_config, text="Configuration Générale & Google Drive (Optionnel)", style="Header.TLabel").pack(anchor="w", pady=(0, 14))
+        ttk.Label(self.tab_config, text="Configuration Générale & Liens", style="Header.TLabel").pack(anchor="w", pady=(0, 14))
 
         form = ttk.Frame(self.tab_config)
         form.pack(fill="x", pady=(0, 16))
 
-        ttk.Label(form, text="Titre du portail :").grid(row=0, column=0, sticky="w", pady=6)
-        self.var_titre = tk.StringVar(value=cfg.get("titre", "Travaux des étudiants"))
-        ttk.Entry(form, textvariable=self.var_titre, width=50).grid(row=0, column=1, sticky="w", pady=6, padx=(10, 0))
+        # Lien Web en ligne
+        ttk.Label(form, text="Lien Web public de dépôt :", font=("Segoe UI", 9, "bold")).grid(row=0, column=0, sticky="w", pady=6)
+        self.var_lien_web = tk.StringVar(value=cfg.get("lien_depot_web", ""))
+        entry_web = ttk.Entry(form, textvariable=self.var_lien_web, width=54)
+        entry_web.grid(row=0, column=1, sticky="w", pady=6, padx=(10, 0))
 
-        ttk.Label(form, text="Sous-titre :").grid(row=1, column=0, sticky="w", pady=6)
+        ttk.Label(form, text="Titre du portail :").grid(row=1, column=0, sticky="w", pady=6)
+        self.var_titre = tk.StringVar(value=cfg.get("titre", "Travaux des étudiants"))
+        ttk.Entry(form, textvariable=self.var_titre, width=54).grid(row=1, column=1, sticky="w", pady=6, padx=(10, 0))
+
+        ttk.Label(form, text="Sous-titre :").grid(row=2, column=0, sticky="w", pady=6)
         self.var_sous_titre = tk.StringVar(value=cfg.get("sous_titre", "Portail des projets et réalisations web"))
-        ttk.Entry(form, textvariable=self.var_sous_titre, width=50).grid(row=1, column=1, sticky="w", pady=6, padx=(10, 0))
+        ttk.Entry(form, textvariable=self.var_sous_titre, width=54).grid(row=2, column=1, sticky="w", pady=6, padx=(10, 0))
 
         self.var_anonymiser = tk.BooleanVar(value=cfg.get("anonymiser", False))
-        ttk.Checkbutton(form, text="Anonymiser les projets (ex: Projet 01, Projet 02...)", variable=self.var_anonymiser).grid(row=2, column=1, sticky="w", pady=8, padx=(10, 0))
+        ttk.Checkbutton(form, text="Anonymiser les projets (ex: Projet 01, Projet 02...)", variable=self.var_anonymiser).grid(row=3, column=1, sticky="w", pady=8, padx=(10, 0))
 
         ttk.Separator(self.tab_config, orient="horizontal").pack(fill="x", pady=12)
 
@@ -255,11 +277,11 @@ class App(tk.Tk):
 
         ttk.Label(drive_frame, text="ID Dossier 'Rendus' :").grid(row=0, column=0, sticky="w", pady=6)
         self.var_rendus_id = tk.StringVar(value=cfg.get("rendus_folder_id", ""))
-        ttk.Entry(drive_frame, textvariable=self.var_rendus_id, width=50).grid(row=0, column=1, sticky="w", pady=6, padx=(10, 0))
+        ttk.Entry(drive_frame, textvariable=self.var_rendus_id, width=54).grid(row=0, column=1, sticky="w", pady=6, padx=(10, 0))
 
         ttk.Label(drive_frame, text="ID Dossier 'Sauvegardes' :").grid(row=1, column=0, sticky="w", pady=6)
         self.var_sauv_id = tk.StringVar(value=cfg.get("sauvegarde_folder_id", ""))
-        ttk.Entry(drive_frame, textvariable=self.var_sauv_id, width=50).grid(row=1, column=1, sticky="w", pady=6, padx=(10, 0))
+        ttk.Entry(drive_frame, textvariable=self.var_sauv_id, width=54).grid(row=1, column=1, sticky="w", pady=6, padx=(10, 0))
 
         btn_bar = ttk.Frame(self.tab_config)
         btn_bar.pack(fill="x", pady=10)
@@ -363,16 +385,25 @@ class App(tk.Tk):
             webbrowser.open(path.as_uri())
 
     def save_settings(self):
+        new_link = self.var_lien_web.get().strip()
         cfg = {
             "titre": self.var_titre.get().strip(),
             "sous_titre": self.var_sous_titre.get().strip(),
             "anonymiser": self.var_anonymiser.get(),
             "rendus_folder_id": self.var_rendus_id.get().strip(),
-            "sauvegarde_folder_id": self.var_sauv_id.get().strip()
+            "sauvegarde_folder_id": self.var_sauv_id.get().strip(),
+            "lien_depot_web": new_link
         }
         club.save_config(cfg)
+
+        # Mettre à jour l'entrée du tableau de bord
+        self.entry_link.configure(state="normal")
+        self.entry_link.delete(0, "end")
+        self.entry_link.insert(0, new_link if new_link else f"http://{self.local_ip}:8080")
+        self.entry_link.configure(state="readonly")
+
         self.log("[SUCCES] Paramètres enregistrés avec succès.")
-        messagebox.showinfo("Paramètres", "Paramètres enregistrés avec succès !")
+        messagebox.showinfo("Paramètres", "Paramètres et lien de dépôt enregistrés avec succès !")
 
     def test_drive(self):
         self.log("[INFO] Test de la configuration Google Drive...")
