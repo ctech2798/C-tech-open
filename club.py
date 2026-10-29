@@ -52,12 +52,12 @@ MAX_ARCHIVE_SIZE = 150 * 1024 * 1024       # 150 Mo max décompressé au total p
 MAX_FILES_PER_ZIP = 1500                   # 1500 fichiers max par zip
 
 DEFAULT_CONFIG = {
-    "titre": "Travaux des étudiants",
+    "titre": "Travaux des étudiants L1 Techno",
     "sous_titre": "Portail des projets et réalisations web",
     "anonymiser": False,
-    "rendus_folder_id": "",
-    "sauvegarde_folder_id": "",
-    "lien_depot_web": ""
+    "rendus_folder_id": "1MOa6TOkuvjr9EfbZvn5L-rCtb5TedmbA",
+    "sauvegarde_folder_id": "1EBXgH7ofN63_-9tFTXLQxM4qz2az8PNa",
+    "lien_depot_web": "https://script.google.com/macros/s/AKfycbzXl0v_h0i8JsnD-M_iq72Yv73DlwdihRPhU3bnwi_uMQqoMFFJD-b28S6Zncuit0DL-g/exec"
 }
 
 

@@ -81,12 +81,10 @@ class App(tk.Tk):
         top_line.pack(fill="x", pady=(0, 8))
 
         cfg = club.load_config()
-        self.online_link = cfg.get("lien_depot_web", "").strip()
+        default_public_url = "https://script.google.com/macros/s/AKfycbzXl0v_h0i8JsnD-M_iq72Yv73DlwdihRPhU3bnwi_uMQqoMFFJD-b28S6Zncuit0DL-g/exec"
+        self.online_link = cfg.get("lien_depot_web", "").strip() or default_public_url
 
-        if self.online_link:
-            self.lbl_server_status = ttk.Label(top_line, text="🌐 Lien de dépôt en ligne (Accessible partout sur Internet)", style="Status.TLabel")
-        else:
-            self.lbl_server_status = ttk.Label(top_line, text="📡 Lien de dépôt réseau (Wi-Fi / LAN du PC)", style="Status.TLabel")
+        self.lbl_server_status = ttk.Label(top_line, text="🌐 Lien de dépôt en ligne (Accessible 24h/24 partout sur Internet)", style="Status.TLabel")
         self.lbl_server_status.pack(side="left")
 
         # Boîte du lien principal
@@ -95,9 +93,8 @@ class App(tk.Tk):
 
         ttk.Label(link_box, text="Lien à donner aux étudiants :", font=("Segoe UI", 10, "bold")).pack(side="left", padx=(0, 8))
 
-        current_display_link = self.online_link if self.online_link else f"http://{self.local_ip}:8080"
-        self.entry_link = ttk.Entry(link_box, font=("Segoe UI", 10), width=36)
-        self.entry_link.insert(0, current_display_link)
+        self.entry_link = ttk.Entry(link_box, font=("Segoe UI", 10), width=38)
+        self.entry_link.insert(0, self.online_link)
         self.entry_link.configure(state="readonly")
         self.entry_link.pack(side="left", fill="x", expand=True, padx=(0, 8))
 
