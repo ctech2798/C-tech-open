@@ -1,0 +1,16 @@
+[project]
+name = "club-gestion-projets"
+version = "1.0.0"
+description = "Espace de dépôt de projets étudiants et portail web"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "python-multipart>=0.0.9",
+    "google-api-python-client>=2.100.0",
+    "google-auth-oauthlib>=1.2.0"
+]
+
+[tool.vercel]
+entrypoint = "serveur_depot.py"

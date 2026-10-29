@@ -547,9 +547,13 @@ async def handle_upload(nom: str = Form(...), prenom: str = Form(...), archive: 
     except zipfile.BadZipFile:
         return JSONResponse({"success": False, "error": "Le fichier envoyé n'est pas une archive .zip valide."}, status_code=400)
 
-    # 3. Enregistrement local dans le dossier rendus/
-    club.RENDUS.mkdir(exist_ok=True)
-    out_path = club.RENDUS / target_name
+    # 3. Enregistrement sécurisé (adapté local et Vercel Serverless)
+    import tempfile
+    is_vercel = bool(os.environ.get("VERCEL"))
+    upload_dir = Path(tempfile.gettempdir()) / "rendus" if is_vercel else club.RENDUS
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    out_path = upload_dir / target_name
     out_path.write_bytes(content)
 
     # 4. Envoi automatique immédiat sur Google Drive si configuré
